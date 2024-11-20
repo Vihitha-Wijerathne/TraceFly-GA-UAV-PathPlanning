@@ -1,7 +1,6 @@
 # TraceFly
 
-## Topic
-**Genetic Algorithms-Based Unmanned Aerial Vehicle (UAV) Path Planning in Dynamic Environments**
+## Topic - **Genetic Algorithms-Based Unmanned Aerial Vehicle (UAV) Path Planning in Dynamic Environments**
 
 ## Overview
 This research focuses on the development of a robust path-planning system for Unmanned Aerial Vehicles (UAVs) using **Genetic Algorithms (GAs)**. The system is designed to navigate dynamic environments effectively, addressing challenges such as unpredictable weather, debris, and terrain variations commonly found in disaster scenarios. The project integrates real-time sensor data, predictive modeling, and advanced optimization techniques to ensure safe, efficient, and adaptive navigation.
