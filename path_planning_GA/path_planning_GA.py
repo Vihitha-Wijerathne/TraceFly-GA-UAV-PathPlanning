@@ -124,3 +124,13 @@ for generation in range(GENERATIONS):
 #get the best path
 best_path = max(population, key=lambda path: path.fitness)
 
+#visualization
+plt.figure()
+plt.xlim(0, env.width)
+plt.ylim(0, env.height)
+plt.plot(*zip(*best_path.waypoints), marker='0')
+plt.scatter(*zip(*env.obsatcles), color = 'red')
+plt.scatter(start[0], start[1], color = 'green')
+plt.scatter(destination[0], destination[1], color='blue')
+plt.title("Best path found by the algorithm")
+plt.show()
