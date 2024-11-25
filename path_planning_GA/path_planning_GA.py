@@ -53,4 +53,53 @@ class Path:
         distance = sum(np.linalg.norm(np.array(self.waypoints[i]) - np.array(self.waypoints[i + 1]))
                        for i in range(len(self.waypoints) - 1))
         time_score = 1 / distance
+
+        #Calculate noise score
+        noise_penalty = turns + (altitude_changes / 10)
+        noise_score = 1 / (1 + noise_penalty)
         
+        #calculate smoothness score
+        smoothness_penalty = turns #Simple penalty for turns
+        smoothness_score = 1 / (1 + smoothness_penalty)
+
+        #Combine the scores using weighted formula
+        self.fitness = (0.3 * safety_score +
+                        0.2 * energy_score +
+                        0.2 * time_score +
+                        0.15 * noise_score +
+                        0.15 * smoothness_score)
+        
+#generate initial population
+def gen_population(start, destination, size):
+    population = []
+    for _ in range(size):
+        waypoints = [start] + [random_point() for _ in range(random.randint(1, 5))] + [destination]
+        population.append(Path(waypoints))
+    return population
+
+def random_point():
+    return (random.randint(0, env.width), random.randint(0, env.height))
+
+#GA operations
+#Selection
+def selection(population):
+    population.sort(key = lambda path: path.fitness, reverse = True)
+    return population[:POPULATION_SIZE // 2]
+
+#Crossover
+def crossover(parent1, parent2):
+    cut = random.randint(1, len(parent1.waypoints) - 1)
+    child_waypoints = parent1.waypoints[:cut] + parent2.waypoints[cut:]
+    return Path(child_waypoints)
+
+#Mutate
+def mutate(path):
+    if random.random() < MUTATION_RATE:
+        index = random.randint(1, len(path.waypoints) - 2)
+        path.waypoints[index] = random_point()
+
+#Main Algorithm
+env = Enviroment(width = 100, height = 100, obstacles = [(50, 50), (51, 51), (52, 50)])
+start = (0, 0)
+destination = (99, 99)
+
