@@ -103,3 +103,24 @@ env = Enviroment(width = 100, height = 100, obstacles = [(50, 50), (51, 51), (52
 start = (0, 0)
 destination = (99, 99)
 
+#Run GA
+population = gen_population(start, destination, POPULATION_SIZE)
+
+for generation in range(GENERATIONS):
+    for path in population:
+        path.calculate_fitness(destination)
+
+    selected = selection(population)
+    next_generation = selected.copy()
+
+    while len(next_generation) < POPULATION_SIZE:
+        parent1, parent2 = random.sample(selected, 2)
+        child = crossover(parent1, parent2)
+        mutate(child)
+        next_generation.append(child)
+        
+    population = next_generation
+
+#get the best path
+best_path = max(population, key=lambda path: path.fitness)
+
