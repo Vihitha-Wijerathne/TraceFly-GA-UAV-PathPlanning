@@ -103,3 +103,52 @@ class UAVPathPlannerGA:
             new_population.extend([child1, child2])
 
         self.population = new_population
+
+    def run(self):
+        self.initialize_population()
+        for generation in range(self.generations):
+            self.evolve()
+            print(f"Generation {generation + 1}: Best fitness = {self.fitness_function(self.best_path)}")
+
+    def plot_paths(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Plot obstacles
+        obstacles = np.array(self.environment.obstacles)
+        ax.scatter(obstacles[:, 0], obstacles[:, 1], obstacles[:, 2], c='red', label='Obstacles')
+
+        # Plot alternative paths
+        for path in self.population:
+            path = np.array(path)
+            ax.plot(path[:, 0], path[:, 1], path[:, 2], linestyle='dashed', alpha=0.5, label='Alternative Path')
+
+        # Plot best path
+        best_path = np.array(self.best_path)
+        ax.plot(best_path[:, 0], best_path[:, 1], best_path[:, 2], c='green', linewidth=2, label='Best Path')
+
+        # Plot source and destination
+        ax.scatter(*self.source, c='blue', s=100, label='Source')
+        ax.scatter(*self.destination, c='purple', s=100, label='Destination')
+
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        plt.legend()
+        plt.show()
+
+
+# Sample Input
+x_bounds = (0, 20)
+y_bounds = (0, 20)
+z_bounds = (0, 10)
+source = (0, 0, 0)
+destination = (20, 20, 10)
+
+# Generate environment with obstacles
+environment = Environment(x_bounds, y_bounds, z_bounds, num_obstacles=50)
+
+# Run the UAV Path Planner
+planner = UAVPathPlannerGA(source, destination, environment)
+planner.run()
+planner.plot_paths()
