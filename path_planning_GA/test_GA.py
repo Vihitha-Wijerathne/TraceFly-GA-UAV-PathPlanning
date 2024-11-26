@@ -21,3 +21,85 @@ class Environment:
             z = random.randint(*self.z_bounds)
             obstacles.append((x, y, z))
         return obstacles
+    
+# Define the UAV path planner with Genetic Algorithm
+class UAVPathPlannerGA:
+    def __init__(self, source, destination, environment, population_size=50, generations=100):
+        self.source = source
+        self.destination = destination
+        self.environment = environment
+        self.population_size = population_size
+        self.generations = generations
+        self.population = []
+        self.best_path = None
+
+    def initialize_population(self):
+        # Create random paths as initial population
+        for _ in range(self.population_size):
+            path = [self.source]
+            current = self.source
+            while current != self.destination:
+                next_point = self.generate_next_point(current)
+                path.append(next_point)
+                current = next_point
+            self.population.append(path)
+    def generate_next_point(self, current):
+        # Generate next point considering movements in 3D space
+        directions = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
+        while True:
+            move = random.choice(directions)
+            next_point = (current[0] + move[0], current[1] + move[1], current[2] + move[2])
+            if self.is_within_bounds(next_point) and next_point not in self.environment.obstacles:
+                return next_point
+
+    def is_within_bounds(self, point):
+        x, y, z = point
+        return (
+            self.environment.x_bounds[0] <= x <= self.environment.x_bounds[1]
+            and self.environment.y_bounds[0] <= y <= self.environment.y_bounds[1]
+            and self.environment.z_bounds[0] <= z <= self.environment.z_bounds[1]
+        )
+
+    def fitness_function(self, path):
+        # Fitness function based on path length and obstacle avoidance
+        path_length = len(path)
+        collisions = sum(1 for point in path if point in self.environment.obstacles)
+        straightness = self.calculate_straightness(path)
+        return -path_length - (collisions * 10) - straightness
+
+    def calculate_straightness(self, path):
+        # Penalize paths with excessive direction changes
+        changes = 0
+        for i in range(1, len(path) - 1):
+            if path[i - 1] != path[i + 1]:
+                changes += 1
+        return changes
+
+    def crossover(self, parent1, parent2):
+        # Single-point crossover
+        split_point = random.randint(1, min(len(parent1), len(parent2)) - 1)
+        child1 = parent1[:split_point] + parent2[split_point:]
+        child2 = parent2[:split_point] + parent1[split_point:]
+        return child1, child2
+
+    def mutate(self, path):
+        # Randomly modify part of the path
+        if len(path) > 2:
+            mutate_idx = random.randint(1, len(path) - 2)
+            path[mutate_idx] = self.generate_next_point(path[mutate_idx - 1])
+
+    def evolve(self):
+        # Perform selection, crossover, and mutation
+        new_population = []
+        fitness_scores = [self.fitness_function(path) for path in self.population]
+        sorted_population = [x for _, x in sorted(zip(fitness_scores, self.population), key=lambda x: -x[0])]
+        self.best_path = sorted_population[0]
+
+        for i in range(0, self.population_size, 2):
+            parent1, parent2 = sorted_population[i], sorted_population[i + 1]
+            child1, child2 = self.crossover(parent1, parent2)
+            self.mutate(child1)
+            self.mutate(child2)
+            new_population.extend([child1, child2])
+
+        self.population = new_population
