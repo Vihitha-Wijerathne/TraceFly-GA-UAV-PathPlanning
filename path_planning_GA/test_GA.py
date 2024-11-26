@@ -21,3 +21,25 @@ class Environment:
             z = random.randint(*self.z_bounds)
             obstacles.append((x, y, z))
         return obstacles
+    
+# Define the UAV path planner with Genetic Algorithm
+class UAVPathPlannerGA:
+    def __init__(self, source, destination, environment, population_size=50, generations=100):
+        self.source = source
+        self.destination = destination
+        self.environment = environment
+        self.population_size = population_size
+        self.generations = generations
+        self.population = []
+        self.best_path = None
+
+    def initialize_population(self):
+        # Create random paths as initial population
+        for _ in range(self.population_size):
+            path = [self.source]
+            current = self.source
+            while current != self.destination:
+                next_point = self.generate_next_point(current)
+                path.append(next_point)
+                current = next_point
+            self.population.append(path)
