@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 
 #Define parameters 
-POPULATION_SIZE = 100
+POPULATION_SIZE = 200
 MUTATION_RATE = 0.1
 GENERATIONS = 50
 
@@ -63,11 +63,11 @@ class Path:
         smoothness_score = 1 / (1 + smoothness_penalty)
 
         #Combine the scores using weighted formula
-        self.fitness = (0.3 * safety_score +
+        self.fitness = (0.5 * safety_score +
                         0.2 * energy_score +
                         0.2 * time_score +
-                        0.15 * noise_score +
-                        0.15 * smoothness_score)
+                        0.05 * noise_score +
+                        0.05 * smoothness_score)
         
 #generate initial population
 def gen_population(start, destination, size):
@@ -128,7 +128,7 @@ best_path = max(population, key=lambda path: path.fitness)
 plt.figure()
 plt.xlim(0, env.width)
 plt.ylim(0, env.height)
-plt.plot(*zip(*best_path.waypoints), marker='0')
+plt.plot(*zip(*best_path.waypoints), marker='o')
 plt.scatter(*zip(*env.obsatcles), color = 'red')
 plt.scatter(start[0], start[1], color = 'green')
 plt.scatter(destination[0], destination[1], color='blue')
