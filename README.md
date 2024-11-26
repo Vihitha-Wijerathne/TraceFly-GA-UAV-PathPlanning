@@ -25,7 +25,8 @@ Key Features:
 - Fitness evaluation for safety, distance, and time.
 - Integration with dynamic data from UAV sensors.
 
-![WhatsApp Image 2024-08-22 at 08 35 20_5982829d](https://github.com/user-attachments/assets/cb1d711a-5373-4314-9bce-ba982b7d2b85)
+![GA Component (3)](https://github.com/user-attachments/assets/2a978d52-8470-40c5-b6e1-458854aeea28)
+
 ---
 
 ### 2. **Ray-Casting-Based Obstacle Detection**
