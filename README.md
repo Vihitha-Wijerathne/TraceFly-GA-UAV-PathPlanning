@@ -25,6 +25,7 @@ Key Features:
 - Fitness evaluation for safety, distance, and time.
 - Integration with dynamic data from UAV sensors.
 
+####Algorithm Architecture:
 ![GA Component (3)](https://github.com/user-attachments/assets/2a978d52-8470-40c5-b6e1-458854aeea28)
 
 ---
