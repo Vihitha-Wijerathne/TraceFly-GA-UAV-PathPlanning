@@ -24,10 +24,10 @@ Key Features:
 - Chromosome representation for UAV paths.
 - Fitness evaluation for safety, distance, and time.
 - Integration with dynamic data from UAV sensors.
-
+<div align="center">
 #### **Algorithm Architecture:**
 ![GA Component (3)](https://github.com/user-attachments/assets/2a978d52-8470-40c5-b6e1-458854aeea28)
-
+</div>
 ---
 
 ### 2. **Ray-Casting-Based Obstacle Detection**
