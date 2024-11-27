@@ -4,42 +4,41 @@ import matplotlib.pyplot as plt
 
 # Environment class with larger and strategically placed obstacles
 class Environment:
-    def __init__(self, x_bounds, y_bounds, z_bounds, num_obstacles):
+    def __init__(self, x_bounds, y_bounds, z_bounds, num_random_obstacles=10):
         self.x_bounds = x_bounds
         self.y_bounds = y_bounds
         self.z_bounds = z_bounds
-        self.num_obstacles = num_obstacles
+        self.num_random_obstacles = num_random_obstacles
         self.obstacles = self.generate_obstacles()
 
     def generate_obstacles(self):
         obstacles = []
-        for _ in range(self.num_obstacles):
-            # Generate center of the obstacle
-            x = np.random.randint(*self.x_bounds)
-            y = np.random.randint(*self.y_bounds)
-            z = np.random.randint(*self.z_bounds)
 
-            # Randomize obstacle size (cuboid)
-            size_x = np.random.randint(1, 4)
-            size_y = np.random.randint(1, 4)
-            size_z = np.random.randint(1, 4)
-
-            # Generate cuboid obstacles
-            for dx in range(-size_x, size_x + 1):
-                for dy in range(-size_y, size_y + 1):
-                    for dz in range(-size_z, size_z + 1):
-                        obstacles.append((x + dx, y + dy, z + dz))
-
-        # Ensure some obstacles are placed strategically in the middle
+        # Add 2 large obstacles in the middle of the environment
         mid_x = (self.x_bounds[0] + self.x_bounds[1]) // 2
         mid_y = (self.y_bounds[0] + self.y_bounds[1]) // 2
         mid_z = (self.z_bounds[0] + self.z_bounds[1]) // 2
+
+        # First large obstacle (cuboid)
         for dx in range(-3, 4):
             for dy in range(-3, 4):
-                for dz in range(-3, 4):
+                for dz in range(-1, 2):  # Shorter in height
                     obstacles.append((mid_x + dx, mid_y + dy, mid_z + dz))
 
-        return list(set(obstacles))
+        # Second large obstacle (cuboid)
+        for dx in range(-2, 3):
+            for dy in range(-2, 3):
+                for dz in range(-2, 3):
+                    obstacles.append((mid_x + dx + 5, mid_y + dy - 5, mid_z + dz))
+
+        # Add random obstacles scattered around the environment
+        for _ in range(self.num_random_obstacles):
+            x = np.random.randint(*self.x_bounds)
+            y = np.random.randint(*self.y_bounds)
+            z = np.random.randint(*self.z_bounds)
+            obstacles.append((x, y, z))
+
+        return list(set(obstacles))  # Remove duplicates
 
 # UAV Path Planner for individual path generation
 class UAVPathPlanner:
@@ -180,16 +179,16 @@ class GeneticAlgorithm:
         plt.show()
 
 # Sample Input
-x_bounds = (0, 20)
-y_bounds = (0, 20)
-z_bounds = (0, 10)
+x_bounds = (0, 30)
+y_bounds = (0, 30)
+z_bounds = (0, 15)
 source = (0, 0, 0)
-destination = (20, 20, 10)
+destination = (30, 30, 15)
 
 # Generate environment
 environment = Environment(x_bounds, y_bounds, z_bounds, num_obstacles=30)
 
 # Run GA
-ga = GeneticAlgorithm(population_size=10, generations=20, mutation_rate=0.1)
+ga = GeneticAlgorithm(population_size=20, generations=30, mutation_rate=0.2)
 best_path = ga.run(source, destination, environment)
 ga.plot_paths(environment, best_path)
