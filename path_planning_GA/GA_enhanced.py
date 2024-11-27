@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # Environment class with larger and strategically placed obstacles
 class Environment:
-    def __init__(self, x_bounds, y_bounds, z_bounds, num_random_obstacles=10):
+    def __init__(self, x_bounds, y_bounds, z_bounds, num_random_obstacles=30):
         self.x_bounds = x_bounds
         self.y_bounds = y_bounds
         self.z_bounds = z_bounds
@@ -186,7 +186,7 @@ source = (0, 0, 0)
 destination = (30, 30, 15)
 
 # Generate environment
-environment = Environment(x_bounds, y_bounds, z_bounds, num_obstacles=30)
+environment = Environment(x_bounds, y_bounds, z_bounds)
 
 # Run GA
 ga = GeneticAlgorithm(population_size=20, generations=30, mutation_rate=0.2)

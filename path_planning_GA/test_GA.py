@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-# Environment class with larger and strategically placed obstacles
+# Define the environment
 class Environment:
     def __init__(self, x_bounds, y_bounds, z_bounds, num_obstacles):
         self.x_bounds = x_bounds
@@ -12,34 +12,14 @@ class Environment:
         self.obstacles = self.generate_obstacles()
 
     def generate_obstacles(self):
+        # Randomly generate obstacle coordinates within bounds
         obstacles = []
         for _ in range(self.num_obstacles):
-            # Generate center of the obstacle
             x = np.random.randint(*self.x_bounds)
             y = np.random.randint(*self.y_bounds)
             z = np.random.randint(*self.z_bounds)
-
-            # Randomize obstacle size (cuboid)
-            size_x = np.random.randint(1, 4)
-            size_y = np.random.randint(1, 4)
-            size_z = np.random.randint(1, 4)
-
-            # Generate cuboid obstacles
-            for dx in range(-size_x, size_x + 1):
-                for dy in range(-size_y, size_y + 1):
-                    for dz in range(-size_z, size_z + 1):
-                        obstacles.append((x + dx, y + dy, z + dz))
-
-        # Ensure some obstacles are placed strategically in the middle
-        mid_x = (self.x_bounds[0] + self.x_bounds[1]) // 2
-        mid_y = (self.y_bounds[0] + self.y_bounds[1]) // 2
-        mid_z = (self.z_bounds[0] + self.z_bounds[1]) // 2
-        for dx in range(-3, 4):
-            for dy in range(-3, 4):
-                for dz in range(-3, 4):
-                    obstacles.append((mid_x + dx, mid_y + dy, mid_z + dz))
-
-        return list(set(obstacles))
+            obstacles.append((x, y, z))
+        return obstacles
 
 # UAV Path Planner with Optimized Logic
 class UAVPathPlanner:
@@ -141,7 +121,7 @@ source = (0, 0, 0)
 destination = (20, 20, 10)
 
 # Generate environment with obstacles
-environment = Environment(x_bounds, y_bounds, z_bounds, num_obstacles=30)
+environment = Environment(x_bounds, y_bounds, z_bounds, num_obstacles=200)
 
 # Run the UAV Path Planner
 planner = UAVPathPlanner(source, destination, environment)
