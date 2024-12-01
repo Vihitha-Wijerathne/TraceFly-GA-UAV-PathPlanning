@@ -161,7 +161,7 @@ class Path:
                        for i in range(len(self.waypoints) - 1))
         time_score = 1 / distance
 
-        # Combine the scores
+        # Combine the scores(final fitness value)
         self.fitness = (0.4 * safety_score +
                         0.2 * energy_score +
                         0.2 * wind_score +
