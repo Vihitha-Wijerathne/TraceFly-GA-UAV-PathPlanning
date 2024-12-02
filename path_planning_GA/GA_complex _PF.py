@@ -161,7 +161,7 @@ class Path:
                        for i in range(len(self.waypoints) - 1))
         time_score = 1 / distance
 
-        # Combine the scores(final fitness value)
+        # Combine the scores(final fitness values)
         self.fitness = (0.4 * safety_score +
                         0.2 * energy_score +
                         0.2 * wind_score +
@@ -222,7 +222,7 @@ class GeneticAlgorithm:
         return max(self.population, key=lambda x: x.fitness)
 
 
-# Initialize Environment and Run Genetic Algorithm
+# Initialize Environment and Run Genetic Algorithm 
 if __name__ == '__main__':
     x_bounds = (0, 20)
     y_bounds = (0, 20)
