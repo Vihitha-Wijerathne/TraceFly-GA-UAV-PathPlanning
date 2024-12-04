@@ -44,19 +44,20 @@ Key Features:
 ### 3. **Predictive Environmental Change Detection**
 **Student:** Prabhanga K.G.B  
 **Overview:**  
-Focuses on predictive modeling to forecast environmental changes, such as shifting weather and terrain. By leveraging machine learning models, this module enables UAVs to proactively adjust their paths in response to hazards.
+Focuses on dynamic spatiotemporal hazard prediction for Unmanned Aerial Vehicles (UAVs). It uses machine learning techniques like LSTM and CNN to predict environmental changes (e.g., wind speed, precipitation) and create real-time heat maps of potential hazards across different zones. This data helps UAVs make informed decisions for safer navigation.
 
 Key Features:
-- Real-time hazard prediction using LSTM and Random Forest.
-- Integration of historical and sensor data for accurate forecasts.
-- Provides data to the GA module for preemptive path adjustments.
+- Combines time-based forecasting (LSTM) with spatial mapping (CNN) for real-time hazard heatmaps.
+- Both historical weather data and simulated sensor data are used to improve prediction accuracy.
+- Focuses on critical UAV factors like wind speed, precipitation, and visibility for safer navigation.
+- Generates heatmaps and quantitative predictions to support UAV decision-making in dynamic environments.
 
 ---
 
 ### 4. **Simulation Environment for Testing**
 **Student:** De Silva K.P.C  
 **Overview:**  
-Designs and develops a realistic simulation environment using tools like MATLAB and Gazebo to validate UAV path-planning algorithms. The environment replicates disaster scenarios with dynamic elements such as debris, weather changes, and terrain shifts.
+Design and develop a realistic simulation environment using MATLAB and Gazebo to validate UAV path-planning algorithms. The environment replicates disaster scenarios with dynamic elements such as debris, weather changes, and terrain shifts.
 
 Key Features:
 - Advanced physics-based simulations for UAV testing.
