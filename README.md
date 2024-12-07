@@ -12,6 +12,8 @@ The project aims to:
 - Validate the system through simulations using MATLAB and Gazebo.
 
 ---
+![image](https://github.com/user-attachments/assets/90e772d4-18ea-497e-97d0-d95898ef2013)
+
 
 ## Main Models and Contributors
 
@@ -38,6 +40,7 @@ Key Features:
 - Utilizes LiDAR sensors for high-resolution mapping.
 - Accurate real-time 3D mapping of obstacles.
 - Integration with UAV control systems for adaptive navigation.
+![image](https://github.com/user-attachments/assets/2493240a-ab12-4080-95c5-00eccc2efde3)
 
 ---
 
@@ -51,6 +54,7 @@ Key Features:
 - Both historical weather data and simulated sensor data are used to improve prediction accuracy.
 - Focuses on critical UAV factors like wind speed, precipitation, and visibility for safer navigation.
 - Generates heatmaps and quantitative predictions to support UAV decision-making in dynamic environments.
+![image](https://github.com/user-attachments/assets/baa3ec9b-d53b-4258-98e4-08a412b54109)
 
 ---
 
@@ -63,6 +67,7 @@ Key Features:
 - Advanced physics-based simulations for UAV testing.
 - Real-time environmental interactions, including moving obstacles.
 - Iterative refinement of path-planning algorithms through simulation data.
+![image](https://github.com/user-attachments/assets/954218c0-92ec-48a4-94a1-9bf88feb1980)
 
 ---
 
