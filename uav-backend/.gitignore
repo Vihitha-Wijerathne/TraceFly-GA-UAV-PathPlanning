@@ -1,0 +1,32 @@
+# Ignore Python virtual environment
+venv/
+env/
+
+# Ignore compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore VS Code settings (if using VS Code)
+.vscode/
+
+# Ignore environment variables
+.env
+
+# Ignore database files (if using SQLite, but you are using PostgreSQL)
+*.sqlite3
+db.sqlite3
+
+# Ignore log files
+logs/
+*.log
+
+# Ignore Python cache files
+*.egg-info/
+*.egg/
+*.pyo
+*.pyd
+*.pdb
+
+# Ignore dependency folders
+node_modules/
