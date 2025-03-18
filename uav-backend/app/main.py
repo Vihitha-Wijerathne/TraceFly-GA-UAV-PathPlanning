@@ -1,7 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from app.routers import telemetry, path_planning, lidar, survivors
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="UAV Disaster Response API")
+
+# Allow all origins for WebSocket connections
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 # Register Routers
 app.include_router(telemetry.router, prefix="/api/telemetry", tags=["Telemetry"])
@@ -12,3 +22,10 @@ app.include_router(survivors.router, prefix="/api/survivors", tags=["Survivors"]
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+
+# WebSocket Test Route
+@app.websocket("/ws/test")
+async def websocket_test(websocket: WebSocket):
+    await websocket.accept()
+    await websocket.send_text("Hello from WebSocket!")
+    await websocket.close()

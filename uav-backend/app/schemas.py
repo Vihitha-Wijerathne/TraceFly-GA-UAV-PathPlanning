@@ -5,12 +5,19 @@ from typing import List, Optional
 # Telemetry Schema
 class TelemetrySchema(BaseModel):
     uav_id: str
+    timestamp: datetime
     latitude: float
     longitude: float
     altitude: float
+    imu_acc_x: float
+    imu_acc_y: float
+    imu_acc_z: float
+    imu_gyro_x: float
+    imu_gyro_y: float
+    imu_gyro_z: float
     speed: float
-    heading: float
-    timestamp: Optional[datetime] = None
+    wind_speed: float
+    battery_level: float
 
     class Config:
         orm_mode = True
