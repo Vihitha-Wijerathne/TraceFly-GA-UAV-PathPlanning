@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Distress Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+            overflow: hidden;
+        }
+        .card-header {
+            background-color: #343a40;
+            color: white;
+            font-weight: bold;
+            padding: 15px 20px;
+        }
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .status-active {
+            background-color: #28a745;
+            box-shadow: 0 0 10px #28a745;
+        }
+        .status-inactive {
+            background-color: #dc3545;
+        }
+        .distress-meter {
+            height: 30px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: width 0.5s ease;
+        }
+        .spectrogram-container {
+            background-color: #343a40;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .spectrogram-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .control-btn {
+            margin-right: 10px;
+            margin-bottom: 10px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .history-item {
+            padding: 10px;
+            border-left: 4px solid #343a40;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 0 5px 5px 0;
+        }
+        .history-item.alert {
+            border-left-color: #dc3545;
+        }
+        .history-timestamp {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .alert-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #dc3545;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .distress-level-critical {
+            background-color: #dc3545;
+        }
+        .distress-level-high {
+            background-color: #fd7e14;
+        }
+        .distress-level-medium {
+            background-color: #ffc107;
+        }
+        .distress-level-low {
+            background-color: #28a745;
+        }
+        .sample-btn {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        #notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+        .mic-setup {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="notification" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span id="notification-message"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <h1 class="my-4 text-center">Audio Distress Detection System</h1>
+        
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-8">
+                <!-- Microphone Setup Card -->
+                <div class="mb-4 card">
+                    <div class="card-header">
+                        <i class="fas fa-microphone me-2"></i>Microphone Setup
+                    </div>
+                    <div class="card-body">
+                        <div class="mic-setup">
+                            <div class="mb-3">
+                                <label for="mic-select" class="form-label">Select Microphone:</label>
+                                <select id="mic-select" class="form-select">
+                                    <option value="">Default Microphone</option>
+                                    <!-- Microphone options will be added here dynamically -->
+                                </select>
+                            </div>
+                            <div class="d-flex">
+                                <button id="refresh-mics-btn" class="btn btn-secondary me-2">
+                                    <i class="fas fa-sync-alt me-2"></i>Refresh Devices
+                                </button>
+                                <button id="test-mic-btn" class="btn btn-info">
+                                    <i class="fas fa-check-circle me-2"></i>Test Microphone
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="status-indicator status-inactive" id="status-indicator"></span>
+                                <span id="status-text">Inactive</span>
+                            </div>
+                            <div>
+                                <button id="start-btn" class="btn btn-success control-btn">
+                                    <i class="fas fa-play me-2"></i>Start
+                                </button>
+                                <button id="stop-btn" class="btn btn-danger control-btn" disabled>
+                                    <i class="fas fa-stop me-2"></i>Stop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Spectrogram Card -->
+                <div class="mb-4 card">
+                    <div class="card-header">
+                        <i class="fas fa-wave-square me-2"></i>Audio Spectrogram
+                    </div>
+                    <div class="card-body">
+                        <div class="spectrogram-container">
+                            <img id="spectrogram" class="spectrogram-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Audio Spectrogram">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Distress Levels Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar me-2"></i>Distress Levels
+                    </div>
+                    <div class="card-body">
+                        <div id="distress-meters">
+                            <!-- Distress meters will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div class="col-md-4">
+                <!-- Alert Card -->
+                <div class="mb-4 card position-relative">
+                    <div id="alert-badge" class="alert-badge d-none">0</div>
+                    <div class="card-header">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Current Alert
+                    </div>
+                    <div class="card-body">
+                        <div id="current-alert" class="alert alert-info">
+                            No active alerts
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- History Card -->
+                <div class="mb-4 card">
+                    <div class="card-header">
+                        <i class="fas fa-history me-2"></i>Alert History
+                    </div>
+                    <div class="card-body">
+                        <div id="alert-history">
+                            <!-- Alert history will be added here dynamically -->
+                            <div class="text-center text-muted">
+                                No alert history yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Training Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-brain me-2"></i>Model Training
+                    </div>
+                    <div class="card-body">
+                        <p>Save current audio sample as:</p>
+                        <div class="mb-3">
+                            <button class="btn btn-sm btn-outline-danger sample-btn" data-label="crying">Crying</button>
+                            <button class="btn btn-sm btn-outline-danger sample-btn" data-label="screaming">Screaming</button>
+                            <button class="btn btn-sm btn-outline-danger sample-btn" data-label="shouting">Shouting</button>
+                            <button class="btn btn-sm btn-outline-warning sample-btn" data-label="gasping">Gasping</button>
+                            <button class="btn btn-sm btn-outline-warning sample-btn" data-label="choking">Choking</button>
+                            <button class="btn btn-sm btn-outline-warning sample-btn" data-label="wheezing">Wheezing</button>
+                            <button class="btn btn-sm btn-outline-success sample-btn" data-label="normal">Normal</button>
+                        </div>
+                        <button id="retrain-btn" class="btn btn-primary w-100">
+                            <i class="fas fa-sync-alt me-2"></i>Retrain Model
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // DOM elements
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const spectrogram = document.getElementById('spectrogram');
+        const distressMeters = document.getElementById('distress-meters');
+        const currentAlert = document.getElementById('current-alert');
+        const alertHistory = document.getElementById('alert-history');
+        const alertBadge = document.getElementById('alert-badge');
+        const retrainBtn = document.getElementById('retrain-btn');
+        const sampleBtns = document.querySelectorAll('.sample-btn');
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notification-message');
+        const micSelect = document.getElementById('mic-select');
+        const refreshMicsBtn = document.getElementById('refresh-mics-btn');
+        const testMicBtn = document.getElementById('test-mic-btn');
+        
+        // Variables
+        let isProcessing = false;
+        let alertCount = 0;
+        let pollingInterval = null;
+        let alertThreshold = 70; // Threshold for triggering alerts
+        
+        // Load microphone devices
+        const loadMicrophoneDevices = () => {
+            fetch('/get_audio_devices')
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing options except the default
+                    while (micSelect.options.length > 1) {
+                        micSelect.remove(1);
+                    }
+                    
+                    // Add device options
+                    if (data.devices && data.devices.length > 0) {
+                        data.devices.forEach(device => {
+                            const option = document.createElement('option');
+                            option.value = device.id;
+                            option.textContent = device.name;
+                            if (device.default) {
+                                option.textContent += ' (Default)';
+                            }
+                            micSelect.appendChild(option);
+                        });
+                        
+                        showNotification(`Found ${data.devices.length} microphone devices`, 'info');
+                    } else {
+                        showNotification('No microphone devices found', 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading microphone devices:', error);
+                    showNotification('Error loading microphone devices', 'danger');
+                });
+        };
+        
+        // Test microphone
+        testMicBtn.addEventListener('click', () => {
+            const deviceId = micSelect.value;
+            
+            testMicBtn.disabled = true;
+            testMicBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Testing...';
+            
+            fetch('/test_microphone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ device_id: deviceId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                testMicBtn.disabled = false;
+                testMicBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Test Microphone';
+                
+                if (data.status === 'success') {
+                    showNotification(data.message);
+                    
+                    // Update spectrogram with test recording
+                    if (data.spectrogram) {
+                        spectrogram.src = `data:image/png;base64,${data.spectrogram}`;
+                    }
+                } else {
+                    showNotification(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error testing microphone:', error);
+                testMicBtn.disabled = false;
+                testMicBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Test Microphone';
+                showNotification('Error testing microphone', 'danger');
+            });
+        });
+        
+        // Refresh microphone devices
+        refreshMicsBtn.addEventListener('click', loadMicrophoneDevices);
+        
+        // Color mapping for distress levels
+        const getColorClass = (value) => {
+            if (value >= 80) return 'distress-level-critical';
+            if (value >= 60) return 'distress-level-high';
+            if (value >= 40) return 'distress-level-medium';
+            return 'distress-level-low';
+        };
+        
+        // Format timestamp
+        const formatTimestamp = (timestamp) => {
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleTimeString();
+        };
+        
+        // Show notification
+        const showNotification = (message, type = 'success') => {
+            notification.className = `alert alert-${type} alert-dismissible fade show`;
+            notificationMessage.textContent = message;
+            notification.style.display = 'block';
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        };
+        
+        // Start audio processing
+        startBtn.addEventListener('click', () => {
+            const deviceId = micSelect.value;
+            
+            fetch('/start_processing', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ device_id: deviceId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    isProcessing = true;
+                    statusIndicator.className = 'status-indicator status-active';
+                    statusText.textContent = 'Active';
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    micSelect.disabled = true;
+                    refreshMicsBtn.disabled = true;
+                    testMicBtn.disabled = true;
+                    
+                    // Start polling for results
+                    pollingInterval = setInterval(fetchResults, 500);
+                    
+                    showNotification('Audio processing started');
+                } else {
+                    showNotification(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error starting processing:', error);
+                showNotification('Error starting audio processing', 'danger');
+            });
+        });
+        
+        // Stop audio processing
+        stopBtn.addEventListener('click', () => {
+            fetch('/stop_processing', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        isProcessing = false;
+                        statusIndicator.className = 'status-indicator status-inactive';
+                        statusText.textContent = 'Inactive';
+                        startBtn.disabled = false;
+                        stopBtn.disabled = true;
+                        micSelect.disabled = false;
+                        refreshMicsBtn.disabled = false;
+                        testMicBtn.disabled = false;
+                        
+                        // Stop polling
+                        clearInterval(pollingInterval);
+                        
+                        showNotification('Audio processing stopped');
+                    } else {
+                        showNotification(data.message, 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error stopping processing:', error);
+                    showNotification('Error stopping audio processing', 'danger');
+                });
+        });
+        
+        // Fetch results from server
+        const fetchResults = () => {
+            fetch('/get_results')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'no_data') {
+                        return;
+                    }
+                    
+                    // Update spectrogram
+                    if (data.spectrogram) {
+                        spectrogram.src = `data:image/png;base64,${data.spectrogram}`;
+                    }
+                    
+                    // Update distress meters
+                    if (data.distress_levels) {
+                        updateDistressMeters(data.distress_levels);
+                        
+                        // Check for alerts
+                        checkForAlerts(data.distress_levels, data.timestamp);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching results:', error);
+                });
+        };
+        
+        // Update distress meters
+        const updateDistressMeters = (distressLevels) => {
+            // Clear existing meters
+            distressMeters.innerHTML = '';
+            
+            // Sort distress levels by value (descending)
+            const sortedLevels = Object.entries(distressLevels)
+                .sort((a, b) => b[1] - a[1]);
+            
+            // Create meters for each distress type
+            for (const [type, value] of sortedLevels) {
+                const meterContainer = document.createElement('div');
+                meterContainer.className = 'mb-3';
+                
+                const meterLabel = document.createElement('div');
+                meterLabel.className = 'd-flex justify-content-between mb-1';
+                
+                const typeSpan = document.createElement('span');
+                typeSpan.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                
+                const valueSpan = document.createElement('span');
+                valueSpan.textContent = `${Math.round(value)}%`;
+                
+                meterLabel.appendChild(typeSpan);
+                meterLabel.appendChild(valueSpan);
+                
+                const meterOuter = document.createElement('div');
+                meterOuter.className = 'progress';
+                meterOuter.style.height = '30px';
+                
+                const meterInner = document.createElement('div');
+                meterInner.className = `progress-bar ${getColorClass(value)}`;
+                meterInner.style.width = `${value}%`;
+                meterInner.setAttribute('role', 'progressbar');
+                meterInner.setAttribute('aria-valuenow', value);
+                meterInner.setAttribute('aria-valuemin', '0');
+                meterInner.setAttribute('aria-valuemax', '100');
+                
+                meterOuter.appendChild(meterInner);
+                meterContainer.appendChild(meterLabel);
+                meterContainer.appendChild(meterOuter);
+                
+                distressMeters.appendChild(meterContainer);
+            }
+        };
+        
+        // Check for alerts
+        const checkForAlerts = (distressLevels, timestamp) => {
+            // Find highest distress level
+            const highestDistress = Object.entries(distressLevels)
+                .filter(([type, _]) => type !== 'normal') // Exclude 'normal' category
+                .sort((a, b) => b[1] - a[1])[0];
+            
+            if (highestDistress && highestDistress[1] >= alertThreshold) {
+                const [type, value] = highestDistress;
+                
+                // Update current alert
+                currentAlert.className = `alert alert-danger`;
+                currentAlert.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${type.toUpperCase()} DETECTED!</strong>
+                            <div>Confidence: ${Math.round(value)}%</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                `;
+                
+                // Add to history
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item alert';
+                historyItem.innerHTML = `
+                    <div><strong>${type.toUpperCase()}</strong> (${Math.round(value)}%)</div>
+                    <div class="history-timestamp">${formatTimestamp(timestamp)}</div>
+                `;
+                
+                // Check if history is empty
+                if (alertHistory.querySelector('.text-muted')) {
+                    alertHistory.innerHTML = '';
+                }
+                
+                // Add to beginning of history
+                alertHistory.insertBefore(historyItem, alertHistory.firstChild);
+                
+                // Limit history items
+                const historyItems = alertHistory.querySelectorAll('.history-item');
+                if (historyItems.length > 10) {
+                    alertHistory.removeChild(historyItems[historyItems.length - 1]);
+                }
+                
+                // Update alert badge
+                alertCount++;
+                alertBadge.textContent = alertCount;
+                alertBadge.classList.remove('d-none');
+                
+                // Play alert sound
+                const audio = new Audio('/static/alert.mp3');
+                audio.play().catch(e => console.log('Error playing alert sound:', e));
+            }
+        };
+        
+        // Save audio sample
+        sampleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const label = btn.dataset.label;
+                
+                fetch('/save_sample', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ label })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showNotification(data.message);
+                    } else {
+                        showNotification(data.message, 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving sample:', error);
+                    showNotification('Error saving audio sample', 'danger');
+                });
+            });
+        });
+        
+        // Retrain model
+        retrainBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to retrain the model? This may take some time.')) {
+                retrainBtn.disabled = true;
+                retrainBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Retraining...';
+                
+                fetch('/retrain_model', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        retrainBtn.disabled = false;
+                        retrainBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Retrain Model';
+                        
+                        if (data.status === 'success') {
+                            showNotification(data.message);
+                        } else {
+                            showNotification(data.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error retraining model:', error);
+                        retrainBtn.disabled = false;
+                        retrainBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Retrain Model';
+                        showNotification('Error retraining model', 'danger');
+                    });
+            }
+        });
+        
+        // Load microphone devices on page load
+        document.addEventListener('DOMContentLoaded', loadMicrophoneDevices);
+    </script>
+</body>
+</html> 

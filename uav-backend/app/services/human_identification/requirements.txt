@@ -1,0 +1,16 @@
+torch>=2.0.0
+torchvision>=0.15.0
+opencv-python>=4.8.0
+librosa>=0.10.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+ultralytics>=8.0.0
+scikit-learn>=1.2.0
+certifi>=2023.7.22
+kaggle>=1.5.13
+soundfile>=0.12.1
+audioread>=3.0.0
+sounddevice>=0.4.6
+ffmpeg-python>=0.2.0
+opencv-contrib-python>=4.7.0
+opencv-contrib-python-headless>=4.7.0  # Contains additional models

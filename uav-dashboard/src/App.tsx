@@ -5,6 +5,8 @@ import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Settings from './pages/Settings';
+import BiometricDetection from './pages/BiometricDetection';
+import AudioDistress from './pages/AudioDistress';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/history" element={<History />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/biometrics" element={<BiometricDetection />} />
+              <Route path="/audio-distress" element={<AudioDistress />} />
             </Routes>
           </main>
         </div>
