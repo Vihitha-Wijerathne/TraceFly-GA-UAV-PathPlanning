@@ -80,3 +80,47 @@ async def telemetry_stream(websocket: WebSocket, uav_id: str):
     except WebSocketDisconnect:
         print(f"⚠️ WebSocket disconnected for UAV: {uav_id}")
         active_connections.remove(websocket)
+        
+@router.post("/process")
+def process_telemetry(data: dict):
+    """
+    Processes telemetry data by compressing and prioritizing it.
+
+    Parameters:
+    - data: A dictionary containing telemetry data (e.g., GPS, IMU).
+
+    Returns:
+    - A dictionary with compressed and prioritized telemetry data.
+    """
+    try:
+        # Extract GPS and IMU data
+        latitude = np.array(data.get("latitude", []))
+        longitude = np.array(data.get("longitude", []))
+        imu_data = np.array(data.get("imu", []))
+        signal_strength = np.array(data.get("signal_strength", []))
+
+        # Compress GPS data
+        compressed_lat, compressed_lon = compress_gps(latitude, longitude)
+
+        # Compress IMU data
+        imu_rle_values, imu_rle_counts, imu_quant_min, imu_quant_step = compress_imu(imu_data)
+
+        # Prioritize data based on signal strength
+        prioritized_indices = np.argsort(-signal_strength)  # Sort in descending order
+        prioritized_data = {
+            "latitude": latitude[prioritized_indices].tolist(),
+            "longitude": longitude[prioritized_indices].tolist(),
+            "signal_strength": signal_strength[prioritized_indices].tolist(),
+        }
+
+        return {
+            "compressed_lat": compressed_lat.decode("latin1"),  # Convert bytes to string for JSON
+            "compressed_lon": compressed_lon.decode("latin1"),
+            "imu_rle_values": imu_rle_values,
+            "imu_rle_counts": imu_rle_counts,
+            "imu_quant_min": imu_quant_min,
+            "imu_quant_step": imu_quant_step,
+            "prioritized_data": prioritized_data,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
