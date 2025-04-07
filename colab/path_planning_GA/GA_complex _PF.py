@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import matplotlib.pyplot as plt
@@ -220,6 +221,34 @@ class GeneticAlgorithm:
 
     def best_path(self):
         return max(self.population, key=lambda x: x.fitness)
+    
+    def visualize_path(environment, best_path, source, destination):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Plot obstacles
+        for obs in environment.obstacles:
+            ax.scatter(*obs["position"], color="red", s=50, label="Obstacle")
+
+        # Plot source and destination
+        ax.scatter(*source, color="green", s=100, label="Source")
+        ax.scatter(*destination, color="blue", s=100, label="Destination")
+
+        # Plot the best path
+        path_points = list(zip(*best_path.waypoints))
+        ax.plot(path_points[0], path_points[1], path_points[2], color="purple", label="Best Path")
+
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
+        plt.legend()
+        plt.show()
+        
+    def simulate_uav_movement(best_path):
+        for waypoint in best_path.waypoints:
+            print(f"UAV moving to {waypoint}")
+            # Simulate delay for real-time movement
+            time.sleep(1)
 
 
 # Initialize Environment and Run Genetic Algorithm 
