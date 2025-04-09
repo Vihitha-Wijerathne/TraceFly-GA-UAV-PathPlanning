@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from .GA_complex_env import GeneticAlgorithm, ComplexEnvironment
-
+from .GA_complex_env import ComplexEnvironment
+from .GA_complex_PF import GeneticAlgorithm
 router = APIRouter()
 
 class SimulationRequest(BaseModel):
