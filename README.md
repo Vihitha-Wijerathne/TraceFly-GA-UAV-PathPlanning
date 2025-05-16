@@ -90,3 +90,9 @@ Key Features:
 ### Supervisors
 - **Dr. Sanika Wijayasekara**
 - **Ms. Ishara Weerathunga**
+
+
+## To run the Application
+
+1. in the frontend - `npm run dev`
+2. in the backend - `uvicorn app.main:app --reload --port 8000`

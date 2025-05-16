@@ -20,7 +20,7 @@ class TelemetrySchema(BaseModel):
     battery_level: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Path Planning Schema
 class PathPlanningSchema(BaseModel):
@@ -32,7 +32,7 @@ class PathPlanningSchema(BaseModel):
     waypoints: List[List[float]]  # List of [lat, lon]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # LiDAR Obstacle Schema
 class LidarObstacleSchema(BaseModel):

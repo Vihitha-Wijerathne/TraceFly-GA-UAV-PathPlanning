@@ -85,12 +85,6 @@ async def telemetry_stream(websocket: WebSocket, uav_id: str):
 def process_telemetry(data: dict):
     """
     Processes telemetry data by compressing and prioritizing it.
-
-    Parameters:
-    - data: A dictionary containing telemetry data (e.g., GPS, IMU).
-
-    Returns:
-    - A dictionary with compressed and prioritized telemetry data.
     """
     try:
         # Extract GPS and IMU data
