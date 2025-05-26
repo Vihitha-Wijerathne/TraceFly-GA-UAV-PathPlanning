@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTelemetry } from '../context/TelemetryContext';
 import { format } from 'date-fns';
 
@@ -32,7 +31,7 @@ const History = () => {
                   {data.speed.toFixed(2)}m/s
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {data.battery.toFixed(1)}%
+                  {data.battery_level.toFixed(1)}%
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {data.latitude.toFixed(6)}, {data.longitude.toFixed(6)}

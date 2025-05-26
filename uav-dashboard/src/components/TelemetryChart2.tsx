@@ -12,12 +12,11 @@ import {
 
 interface TelemetryPoint {
   timestamp: string;
-  latitude: number;
-  longitude: number;
-  signal_strength: number;
+  battery_level: number;
+  speed: number;
 }
 
-const TelemetryChart = () => {
+const TelemetryChart2 = () => {
   const [telemetryData, setTelemetryData] = useState<TelemetryPoint[]>([]);
 
   useEffect(() => {
@@ -28,22 +27,16 @@ const TelemetryChart = () => {
 
         if (data?.timestamp) {
           setTelemetryData((prev) => [
-            ...prev.slice(-29), // Keep last 30 points
+            ...prev.slice(-29),
             {
               timestamp: new Date(data.timestamp).toLocaleTimeString(),
-              latitude: data.latitude,
-              longitude: data.longitude,
-              signal_strength:
-                data.signal_strength === "low"
-                  ? 1
-                  : data.signal_strength === "medium"
-                  ? 2
-                  : 3,
+              battery_level: data.battery_level ?? 0,
+              speed: data.speed ?? 0,
             },
           ]);
         }
       } catch (err) {
-        console.error("Failed to fetch Unity telemetry:", err);
+        console.error("⚠️ Failed to fetch telemetry:", err);
       }
     }, 1000);
 
@@ -51,33 +44,22 @@ const TelemetryChart = () => {
   }, []);
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-lg">
-      <h3 className="text-lg font-semibold mb-4">Signal Strength Over Time</h3>
+    <div className="bg-white p-4 rounded-lg shadow-lg col-span-1">
+      <h3 className="text-lg font-semibold mb-4">Battery Drain vs Speed</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={telemetryData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="timestamp" />
-          <YAxis
-            domain={[0, 3]}
-            ticks={[1, 2, 3]}
-            tickFormatter={(value) =>
-              value === 1 ? "Low" : value === 2 ? "Medium" : "High"
-            }
-          />
+          <YAxis yAxisId="left" domain={[0, 100]} label={{ value: "Battery (%)", angle: -90, position: "insideLeft" }} />
+          <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} label={{ value: "Speed (m/s)", angle: 90, position: "insideRight" }} />
           <Tooltip />
           <Legend />
-          <Line
-            type="monotone"
-            dataKey="signal_strength"
-            stroke="#4f46e5"
-            name="Signal Strength"
-            dot={false}
-          />
+          <Line yAxisId="left" type="monotone" dataKey="battery_level" stroke="#facc15" name="Battery Level" dot={false} />
+          <Line yAxisId="right" type="monotone" dataKey="speed" stroke="#3b82f6" name="Speed" dot={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>
-    
   );
 };
 
-export default TelemetryChart;
+export default TelemetryChart2;

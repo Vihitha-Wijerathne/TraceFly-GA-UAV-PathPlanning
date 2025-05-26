@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, LargeBinary
 from sqlalchemy.sql import func
 from app.database import Base
+from sqlalchemy import JSON
 
 class Telemetry(Base):
     __tablename__ = "telemetry"
@@ -65,3 +66,11 @@ class Survivor(Base):
     survivor_lon = Column(Float, nullable=False)
     condition = Column(String, nullable=False)  # e.g., "critical", "stable"
     detected_at = Column(DateTime, default=func.now())
+    
+class LiDARRecord(Base):
+    __tablename__ = "lidar_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    uav_id = Column(String, index=True)
+    timestamp = Column(DateTime)
+    hit_count = Column(Integer)

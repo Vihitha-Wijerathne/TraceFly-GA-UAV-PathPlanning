@@ -5,6 +5,9 @@ import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Settings from './pages/Settings';
+import UAVMap from './pages/LiDARData';
+import TelemetryPanel from './components/TelemetryPanel';
+import Navigation from './pages/Navigation';
 
 function App() {
   return (
@@ -17,6 +20,9 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/history" element={<History />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/uavmap" element={<UAVMap />} />
+              <Route path="/telemetryPanel" element={<TelemetryPanel />} />
+              <Route path="/navigation" element={<Navigation />} />
             </Routes>
           </main>
         </div>

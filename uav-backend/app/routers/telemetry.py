@@ -1,5 +1,5 @@
 import numpy as np  
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Telemetry
@@ -7,9 +7,11 @@ from app.services.telemetry_service import compress_gps, compress_imu
 from app.schemas import TelemetrySchema
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import List
+from app.schemas import UnityTelemetrySchema
 
 router = APIRouter()
 active_connections: List[WebSocket] = []
+latest_telemetry_data = {}
 
 @router.post("/", response_model=TelemetrySchema)
 def upload_telemetry(data: TelemetrySchema, db: Session = Depends(get_db)):
@@ -86,11 +88,7 @@ def process_telemetry(data: dict):
     """
     Processes telemetry data by compressing and prioritizing it.
 
-    Parameters:
-    - data: A dictionary containing telemetry data (e.g., GPS, IMU).
-
-    Returns:
-    - A dictionary with compressed and prioritized telemetry data.
+    Returns a dictionary with all NumPy types converted to native Python types.
     """
     try:
         # Extract GPS and IMU data
@@ -106,7 +104,7 @@ def process_telemetry(data: dict):
         imu_rle_values, imu_rle_counts, imu_quant_min, imu_quant_step = compress_imu(imu_data)
 
         # Prioritize data based on signal strength
-        prioritized_indices = np.argsort(-signal_strength)  # Sort in descending order
+        prioritized_indices = np.argsort(-signal_strength)  # Descending order
         prioritized_data = {
             "latitude": latitude[prioritized_indices].tolist(),
             "longitude": longitude[prioritized_indices].tolist(),
@@ -114,13 +112,106 @@ def process_telemetry(data: dict):
         }
 
         return {
-            "compressed_lat": compressed_lat.decode("latin1"),  # Convert bytes to string for JSON
+            "compressed_lat": compressed_lat.decode("latin1"),
             "compressed_lon": compressed_lon.decode("latin1"),
-            "imu_rle_values": imu_rle_values,
-            "imu_rle_counts": imu_rle_counts,
-            "imu_quant_min": imu_quant_min,
-            "imu_quant_step": imu_quant_step,
+            "imu_rle_values": imu_rle_values.tolist() if hasattr(imu_rle_values, "tolist") else imu_rle_values,
+            "imu_rle_counts": imu_rle_counts.tolist() if hasattr(imu_rle_counts, "tolist") else imu_rle_counts,
+            "imu_quant_min": int(imu_quant_min) if isinstance(imu_quant_min, np.generic) else imu_quant_min,
+            "imu_quant_step": int(imu_quant_step) if isinstance(imu_quant_step, np.generic) else imu_quant_step,
             "prioritized_data": prioritized_data,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/gps")
+def receive_gps(data: dict = Body(...)):
+    """
+    Receives compressed GPS data from UAV.
+    Example:
+    {
+        "uav_id": "drone01",
+        "timestamp": "2025-05-25T14:31:00",
+        "lat": 123.456789,
+        "lon": 78.910111,
+        "alt": 90.0
+    }
+    """
+    print(f"[GPS] {data['uav_id']} @ {data['lat']:.6f}, {data['lon']:.6f}, alt={data['alt']:.1f}")
+    return {"status": "received", "type": "gps"}
+
+
+@router.post("/imu")
+def receive_imu(data: dict = Body(...)):
+    """
+    Receives compressed IMU data from UAV.
+    Example:
+    {
+        "uav_id": "drone01",
+        "timestamp": "2025-05-25T14:31:00",
+        "ax": 0.1, "ay": 0.0, "az": 9.8,
+        "yaw": 45.2, "pitch": 3.4, "roll": 2.1
+    }
+    """
+    print(f"[IMU] {data['uav_id']} @ acc=({data['ax']}, {data['ay']}, {data['az']}) | angles=({data['pitch']}, {data['roll']}, {data['yaw']})")
+    return {"status": "received", "type": "imu"}
+
+
+@router.post("/battery")
+def receive_battery(data: dict = Body(...)):
+    """
+    Receives battery/signal status from UAV.
+    Example:
+    {
+        "uav_id": "drone01",
+        "timestamp": "2025-05-25T14:31:00",
+        "battery": 88.5,
+        "signal": "medium"
+    }
+    """
+    print(f"[Battery] {data['uav_id']} battery={data['battery']}%, signal={data['signal']}")
+    return {"status": "received", "type": "battery"}
+
+
+@router.post("/lidar")
+def receive_lidar(data: dict = Body(...)):
+    """
+    Receives LiDAR hit data (optional).
+    Example:
+    {
+        "uav_id": "drone01",
+        "timestamp": "2025-05-25T14:31:00",
+        "lidar_hits": [
+            {"x": 1.0, "y": 2.0, "z": 3.0},
+            ...
+        ]
+    }
+    """
+    print(f"[LiDAR] {data['uav_id']} hits={len(data.get('lidar_hits', []))}")
+    return {"status": "received", "type": "lidar"}
+
+@router.post("/unity")
+def receive_unity_telemetry(payload: UnityTelemetrySchema, db: Session = Depends(get_db)):
+    print(f"[Unity POST] {payload.uav_id} @ {payload.lat}, {payload.lon}, alt={payload.alt}")
+    global latest_telemetry_data
+
+    latest_telemetry_data = {
+        "uav_id": payload.uav_id,
+        "timestamp": payload.timestamp,
+        "latitude": payload.lat,
+        "longitude": payload.lon,
+        "altitude": payload.alt,
+        "pitch": payload.pitch,
+        "roll": payload.roll,
+        "yaw": payload.yaw,
+        "speed": payload.speed,
+        "battery_level": payload.battery,
+        "wind": payload.wind,
+        "signal_strength": payload.signal,
+    }
+
+    return {"message": "Unity telemetry received"}
+
+
+@router.get("/unity/latest")
+def get_latest_telemetry():
+    return latest_telemetry_data

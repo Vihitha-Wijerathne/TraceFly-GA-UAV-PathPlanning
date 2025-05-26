@@ -20,7 +20,7 @@ class TelemetrySchema(BaseModel):
     battery_level: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Path Planning Schema
 class PathPlanningSchema(BaseModel):
@@ -32,7 +32,7 @@ class PathPlanningSchema(BaseModel):
     waypoints: List[List[float]]  # List of [lat, lon]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # LiDAR Obstacle Schema
 class LidarObstacleSchema(BaseModel):
@@ -43,7 +43,7 @@ class LidarObstacleSchema(BaseModel):
     detected_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Survivor Schema
 class SurvivorSchema(BaseModel):
@@ -54,4 +54,33 @@ class SurvivorSchema(BaseModel):
     detected_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class UnityTelemetrySchema(BaseModel):
+    uav_id: str
+    timestamp: datetime
+    lat: float
+    lon: float
+    alt: float
+    pitch: float
+    roll: float
+    yaw: float
+    speed: float
+    battery: float
+    wind: float
+    signal: str
+    
+class Point3D(BaseModel):
+    x: float
+    y: float
+    z: float
+
+class LiDARPayload(BaseModel):
+    uav_id: str
+    timestamp: datetime
+    hits: List[Point3D]
+    
+class LiDARPingLite(BaseModel):
+    uav_id: str
+    timestamp: datetime
+    hit_count: int

@@ -1,43 +1,31 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from .GA_complex_env import GeneticAlgorithm, ComplexEnvironment
+from typing import List
+from .GA_complex_env import ComplexEnvironment
+from .GA_enhanced import GeneticAlgorithm
 
 router = APIRouter()
 
 class SimulationRequest(BaseModel):
-    start: tuple[int, int, int]
-    destination: tuple[int, int, int]
+    start: List[float]  # [x, y, z]
+    destination: List[float]
 
 @router.post("/start")
 def start_simulation(request: SimulationRequest):
     try:
-        # Define the environment bounds and obstacles
-        x_bounds = (0, 20)
-        y_bounds = (0, 20)
-        z_bounds = (0, 10)
-        num_obstacles = 10
+        x_bounds = (0, 100)
+        y_bounds = (0, 50)
+        z_bounds = (0, 100)
+        num_obstacles = 20
 
-        # Initialize the environment
         environment = ComplexEnvironment(x_bounds, y_bounds, z_bounds, num_obstacles)
+        ga = GeneticAlgorithm(population_size=50, generations=100, mutation_rate=0.2)
 
-        # Initialize the Genetic Algorithm
-        ga = GeneticAlgorithm(
-            population_size=50,
-            mutation_rate=0.1,
-            generations=100,
-            environment=environment,
-            source=request.start,
-            destination=request.destination,
-        )
+        best_path = ga.run(tuple(request.start), tuple(request.destination), environment)
 
-        # Run the simulation
-        ga.evolve()
-        best_path = ga.best_path()
-
-        # Return the best path
         return {
-            "best_path": [point for point in best_path.waypoints],
-            "obstacles": environment.obstacles,
+            "best_path": best_path,
+            "obstacles": environment.obstacles
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

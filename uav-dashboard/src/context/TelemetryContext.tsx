@@ -1,59 +1,66 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-interface TelemetryData {
-  altitude: number;
-  speed: number;
-  battery: number;
+export interface TelemetryData {
+  uav_id: string;
+  timestamp: string;
   latitude: number;
   longitude: number;
-  heading: number;
-  timestamp: number;
+  altitude: number;
+  pitch: number;
+  roll: number;
+  yaw: number;
+  speed: number;
+  battery_level: number;
+  wind: number;
+  signal: string;
 }
 
 interface TelemetryContextType {
-  telemetryData: TelemetryData;
+  telemetryData: TelemetryData | null;
   telemetryHistory: TelemetryData[];
   isConnected: boolean;
 }
 
-const TelemetryContext = createContext<TelemetryContextType | undefined>(undefined);
+const TelemetryContext = createContext<TelemetryContextType | undefined>(
+  undefined
+);
 
-export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [telemetryData, setTelemetryData] = useState<TelemetryData>({
-    altitude: 0,
-    speed: 0,
-    battery: 100,
-    latitude: 51.505,
-    longitude: -0.09,
-    heading: 0,
-    timestamp: Date.now()
-  });
+export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [telemetryData, setTelemetryData] = useState<TelemetryData | null>(
+    null
+  );
   const [telemetryHistory, setTelemetryHistory] = useState<TelemetryData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Simulate real-time data updates
-    const interval = setInterval(() => {
-      const newData = {
-        altitude: Math.random() * 100 + 100,
-        speed: Math.random() * 30 + 10,
-        battery: Math.max(0, telemetryData.battery - 0.1),
-        latitude: telemetryData.latitude + (Math.random() - 0.5) * 0.001,
-        longitude: telemetryData.longitude + (Math.random() - 0.5) * 0.001,
-        heading: (telemetryData.heading + 5) % 360,
-        timestamp: Date.now()
-      };
-      
-      setTelemetryData(newData);
-      setTelemetryHistory(prev => [...prev, newData].slice(-100));
-      setIsConnected(true);
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:8000/api/telemetry/unity/latest"
+        );
+        if (!res.ok) throw new Error("Failed to fetch telemetry");
+
+        const data: TelemetryData = await res.json();
+        setTelemetryData(data);
+        setTelemetryHistory((prev) => [...prev, data].slice(-100));
+        setIsConnected(true);
+        console.log("[Telemetry] API data:", data);
+
+      } catch (err) {
+        console.error("[TelemetryContext] Error fetching data:", err);
+        setIsConnected(false);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [telemetryData]);
+  }, []);
 
   return (
-    <TelemetryContext.Provider value={{ telemetryData, telemetryHistory, isConnected }}>
+    <TelemetryContext.Provider
+      value={{ telemetryData, telemetryHistory, isConnected }}
+    >
       {children}
     </TelemetryContext.Provider>
   );
@@ -61,8 +68,7 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
 export const useTelemetry = () => {
   const context = useContext(TelemetryContext);
-  if (context === undefined) {
-    throw new Error('useTelemetry must be used within a TelemetryProvider');
-  }
+  if (!context)
+    throw new Error("useTelemetry must be used within TelemetryProvider");
   return context;
 };

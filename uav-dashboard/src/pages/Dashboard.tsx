@@ -1,8 +1,8 @@
 import { Battery, Compass, Gauge, Ruler } from "lucide-react";
-import Map from "../components/Map";
 import TelemetryChart from "../components/TelemetryChart";
 import { useTelemetry } from "../context/TelemetryContext";
 import PathSelection from "../components/PathSelection";
+import TelemetryChart2 from "../components/TelemetryChart2";
 
 const Dashboard = () => {
   const { telemetryData } = useTelemetry();
@@ -10,28 +10,46 @@ const Dashboard = () => {
   const stats = [
     {
       label: "Altitude",
-      value: `${telemetryData.altitude.toFixed(1)}m`,
+      value:
+        telemetryData?.altitude !== undefined
+          ? `${telemetryData.altitude.toFixed(1)}m`
+          : "N/A",
       icon: Ruler,
       color: "text-blue-600",
     },
     {
-      label: "Speed",
-      value: `${telemetryData.speed.toFixed(1)}m/s`,
-      icon: Gauge,
-      color: "text-green-600",
+      label: "Longitude",
+      value:
+        telemetryData?.longitude !== undefined
+          ? `${telemetryData.longitude.toFixed(1)}m/s`
+          : "N/A",
+      icon: Ruler,
+      color: "text-blue-600",
+    },
+    {
+      label: "Latitude",
+      value:
+        telemetryData?.latitude !== undefined
+          ? `${telemetryData.latitude.toFixed(1)}m/s`
+          : "N/A",
+      icon: Ruler,
+      color: "text-blue-600",
     },
     {
       label: "Battery",
-      value: `${telemetryData.battery.toFixed(1)}%`,
+      value:
+        telemetryData?.battery_level !== undefined
+          ? `${telemetryData.battery_level.toFixed(1)}%`
+          : "N/A",
       icon: Battery,
-      color: "text-yellow-600",
+      color: "text-green-600",
     },
-    {
-      label: "Heading",
-      value: `${telemetryData.heading.toFixed(1)}°`,
-      icon: Compass,
-      color: "text-purple-600",
-    },
+    // {
+    //   label: "Heading",
+    //   value: telemetryData ? `${telemetryData.heading.toFixed(1)}°` : "N/A",
+    //   icon: Compass,
+    //   color: "text-purple-600",
+    // },
   ];
   const handlePathSubmit = (
     start: [number, number, number],
@@ -69,8 +87,8 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Map />
           <TelemetryChart />
+          <TelemetryChart2 />
         </div>
       </div>
       <div className="container mx-auto p-4">
