@@ -1,4 +1,6 @@
+import React, { useEffect, useState } from "react";
 import { useTelemetry } from "../hooks/useTelemetry";
+import { useNavigate } from "react-router-dom";
 import {
   BatteryFull,
   Ruler,
@@ -7,9 +9,12 @@ import {
   GaugeCircle,
   WifiIcon,
   Navigation,
+  AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import TelemetryCard from "../components/TelemetryCard";
 
+// Types
 type TelemetryData = {
   uav_id: string;
   latitude: number;
@@ -37,11 +42,80 @@ const getDirectionFromYaw = (yaw: number): string => {
   return "N/A";
 };
 
+// Helper for obstacle status label & style
+const getObstacleLabel = (hitCount: number) => {
+  if (hitCount <= 3)
+    return { label: "Clear", style: "bg-green-100 text-green-700" };
+  if (hitCount <= 12)
+    return { label: "Few Obstacles", style: "bg-yellow-100 text-yellow-800" };
+  return { label: "Heavy Obstacles", style: "bg-red-100 text-red-700" };
+};
+
 const TelemetryPanel = () => {
   const data = useTelemetry() as TelemetryData | null;
+  const navigate = useNavigate();
+
+  // LiDAR hit count state
+  const [lidarHits, setLidarHits] = useState(0);
+  const [showStopPrompt, setShowStopPrompt] = useState(false);
+  const [criticalPrompt, setCriticalPrompt] = useState(false);
+
+  // Fetch latest LiDAR hit count
+  useEffect(() => {
+    const fetchLatestHits = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:8000/api/lidar/unity/history/drone_test"
+        );
+        const history = await res.json();
+        if (Array.isArray(history) && history.length > 0) {
+          const last = history[history.length - 1];
+          setLidarHits(last.hit_count);
+          setShowStopPrompt(last.hit_count > 21);
+        } else {
+          setLidarHits(0);
+          setShowStopPrompt(false);
+        }
+      } catch {
+        setLidarHits(0);
+        setShowStopPrompt(false);
+      }
+    };
+    fetchLatestHits();
+    const interval = setInterval(fetchLatestHits, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleStop = async () => {
+    await fetch("http://localhost:8000/api/simulation/stop", {
+      method: "POST",
+    });
+    setShowStopPrompt(false);
+    setCriticalPrompt(false);
+  };
+
+  const handleResume = async () => {
+    await fetch("http://localhost:8000/api/simulation/resume", {
+      method: "POST",
+    });
+    setCriticalPrompt(false);
+  };
+
+  // Watch signal for low bandwidth changes and close prompt when out of low zone
+  useEffect(() => {
+    if (data && data.signal === "low") {
+      setCriticalPrompt(true);
+    } else {
+      setCriticalPrompt(false);
+    }
+  }, [data?.signal]);
+
+  const obstacle = getObstacleLabel(lidarHits);
 
   if (!data)
-    return <div className="text-gray-500 text-center mt-6">Loading telemetry...</div>;
+    return (
+      <div className="text-gray-500 text-center mt-6">Loading telemetry...</div>
+    );
 
   const {
     latitude,
@@ -75,7 +149,46 @@ const TelemetryPanel = () => {
   return (
     <div className="p-6 space-y-6">
       <h2 className="text-xl font-semibold text-gray-800">📡 Drone Status</h2>
+      {/* --- Bandwidth Warnings --- */}
+      {signal === "medium" && (
+        <div className="flex items-center gap-2 bg-orange-50 border-l-4 border-orange-400 text-orange-700 p-3 rounded mb-4">
+          <AlertTriangle className="w-5 h-5 text-orange-500" />
+          <span className="font-semibold">Warning:</span>
+          UAV is currently in a <b>limited bandwidth (Medium Signal)</b> area!
+        </div>
+      )}
+      {/* --- Critical Bandwidth Prompt --- */}
+      {criticalPrompt && signal === "low" && (
+        <div className="flex flex-col items-center bg-red-50 border-l-4 border-red-600 text-red-700 p-4 rounded mb-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+            <span className="font-semibold">Critical:</span>
+            UAV is now in a <b>critically low bandwidth</b> zone!
+          </div>
+          <div className="mt-4 flex gap-4">
+            <button
+              className="px-4 py-2 bg-green-600 text-white rounded font-bold hover:bg-green-700 transition"
+              onClick={handleResume}
+            >
+              RESUME
+            </button>
+            <button
+              className="px-4 py-2 bg-red-600 text-white rounded font-bold hover:bg-red-700 transition"
+              onClick={async () => {
+                await handleStop();
+                navigate("/"); // Go to dashboard
+                setTimeout(() => {
+                  alert("Please enter a new destination to fly.");
+                }, 500);
+              }}
+            >
+              STOP
+            </button>
+          </div>
+        </div>
+      )}
 
+      {/* --- Main Telemetry Cards --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <TelemetryCard
           label="Altitude"
@@ -140,7 +253,32 @@ const TelemetryPanel = () => {
           value={direction}
           icon={<Navigation className="text-orange-500" />}
         />
+        {/* ----- Obstacle Card ----- */}
+        <div className="bg-white p-4 rounded-lg shadow text-sm w-full flex justify-between items-center">
+          <div>
+            <div className="text-gray-500 mb-1">Obstacle</div>
+            <div
+              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${obstacle.style}`}
+            >
+              {obstacle.label}
+            </div>
+          </div>
+        </div>
       </div>
+      {/* ----- STOP Prompt if Heavy Obstacles -----
+      {showStopPrompt && (
+        <div className="my-6 bg-red-50 border border-red-200 p-4 rounded shadow flex flex-col items-center">
+          <div className="text-red-700 text-md font-semibold mb-2">
+            The drone is in a obstacle full environment, want to stop the drone?
+          </div>
+          <button
+            className="px-4 py-2 bg-red-600 text-white rounded font-bold hover:bg-red-700 transition"
+            onClick={handleStop}
+          >
+            STOP
+          </button>
+        </div>
+      )} */}
     </div>
   );
 };

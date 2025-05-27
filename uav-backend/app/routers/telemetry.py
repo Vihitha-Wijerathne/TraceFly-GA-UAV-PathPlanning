@@ -95,7 +95,7 @@ def process_telemetry(data: dict):
         latitude = np.array(data.get("latitude", []))
         longitude = np.array(data.get("longitude", []))
         imu_data = np.array(data.get("imu", []))
-        signal_strength = np.array(data.get("signal_strength", []))
+        signal = np.array(data.get("signal", []))
 
         # Compress GPS data
         compressed_lat, compressed_lon = compress_gps(latitude, longitude)
@@ -104,11 +104,11 @@ def process_telemetry(data: dict):
         imu_rle_values, imu_rle_counts, imu_quant_min, imu_quant_step = compress_imu(imu_data)
 
         # Prioritize data based on signal strength
-        prioritized_indices = np.argsort(-signal_strength)  # Descending order
+        prioritized_indices = np.argsort(-signal)  # Descending order
         prioritized_data = {
             "latitude": latitude[prioritized_indices].tolist(),
             "longitude": longitude[prioritized_indices].tolist(),
-            "signal_strength": signal_strength[prioritized_indices].tolist(),
+            "signal": signal[prioritized_indices].tolist(),
         }
 
         return {
@@ -206,7 +206,7 @@ def receive_unity_telemetry(payload: UnityTelemetrySchema, db: Session = Depends
         "speed": payload.speed,
         "battery_level": payload.battery,
         "wind": payload.wind,
-        "signal_strength": payload.signal,
+        "signal": payload.signal,
     }
 
     return {"message": "Unity telemetry received"}

@@ -51,20 +51,8 @@ const Dashboard = () => {
     //   color: "text-purple-600",
     // },
   ];
-  const handlePathSubmit = (
-    start: [number, number, number],
-    destination: [number, number, number]
-  ) => {
-    console.log("Start:", start, "Destination:", destination);
-    // Send the start and destination to the backend
-    fetch("http://localhost:8000/api/simulation/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ start, destination }),
-    })
-      .then((response) => response.json())
-      .then((data) => console.log("Simulation started:", data))
-      .catch((error) => console.error("Error:", error));
+  const handlePathSubmit = async () => {
+    await fetch("http://localhost:8000/api/simulation/start", { method: "POST" });
   };
 
   return (
@@ -92,7 +80,7 @@ const Dashboard = () => {
         </div>
       </div>
       <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">UAV Path Planning Dashboard</h1>
+        <h1 className="text-2xl font-bold mb-6">Select Your Destination</h1>
         <PathSelection onSubmit={handlePathSubmit} />
       </div>
     </div>

@@ -8,7 +8,7 @@ export interface TelemetryData {
   altitude: number;
   speed: number;
   battery_level: number;
-  signal_strength: string;
+  signal: string;
 }
 
 export function useTelemetry() {

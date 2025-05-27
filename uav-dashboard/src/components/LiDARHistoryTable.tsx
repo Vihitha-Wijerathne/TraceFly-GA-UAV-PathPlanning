@@ -4,6 +4,7 @@ import moment from "moment";
 type LiDARHistoryRow = {
   timestamp: string;
   hit_count: number;
+  tags: string[]; // New: all tags in that record
 };
 
 const classifyArea = (hits: number): string => {
@@ -39,6 +40,9 @@ const LiDARHistoryTable = () => {
           <tr className="bg-gray-100 border-b">
             <th className="py-2 px-4 font-medium text-gray-700">Timestamp</th>
             <th className="py-2 px-4 font-medium text-gray-700">Hit Count</th>
+            <th className="py-2 px-4 font-medium text-gray-700">
+              Object Types
+            </th>
             <th className="py-2 px-4 font-medium text-gray-700">Environment</th>
           </tr>
         </thead>
@@ -53,6 +57,11 @@ const LiDARHistoryTable = () => {
                 </td>
                 <td className="py-2 px-4 font-mono text-indigo-600">
                   {row.hit_count}
+                </td>
+                <td className="py-2 px-4">
+                  {row.tags && row.tags.length > 0
+                    ? Array.from(new Set(row.tags)).join(", ")
+                    : "-"}
                 </td>
                 <td className="py-2 px-4">
                   <span

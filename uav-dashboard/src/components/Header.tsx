@@ -23,18 +23,18 @@ const Header = () => {
             <span>Dashboard</span>
           </Link> */}
           <Link
+            to="/navigation"
+            className="flex items-center space-x-1 hover:text-blue-400"
+          >
+            <Drone size={18} />
+            <span>Navigation</span>
+          </Link>
+          <Link
             to="/uavmap"
             className="flex items-center space-x-1 hover:text-blue-400"
           >
             <Drone size={18} />
             <span>LiDAR</span>
-          </Link>
-          <Link
-            to="/navigation"
-            className="flex items-center space-x-1 hover:text-blue-400"
-          >
-            <Drone size={18} />
-            <span>UAV Navigation</span>
           </Link>
           <Link
             to="/telemetryPanel"

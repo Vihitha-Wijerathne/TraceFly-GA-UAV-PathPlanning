@@ -14,7 +14,7 @@ interface TelemetryPoint {
   timestamp: string;
   latitude: number;
   longitude: number;
-  signal_strength: number;
+  signal: number;
 }
 
 const TelemetryChart = () => {
@@ -33,10 +33,10 @@ const TelemetryChart = () => {
               timestamp: new Date(data.timestamp).toLocaleTimeString(),
               latitude: data.latitude,
               longitude: data.longitude,
-              signal_strength:
-                data.signal_strength === "low"
+              signal:
+                data.signal === "low"
                   ? 1
-                  : data.signal_strength === "medium"
+                  : data.signal === "medium"
                   ? 2
                   : 3,
             },
@@ -68,7 +68,7 @@ const TelemetryChart = () => {
           <Legend />
           <Line
             type="monotone"
-            dataKey="signal_strength"
+            dataKey="signal"
             stroke="#4f46e5"
             name="Signal Strength"
             dot={false}

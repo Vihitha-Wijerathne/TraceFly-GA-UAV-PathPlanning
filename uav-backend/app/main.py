@@ -1,5 +1,5 @@
 from fastapi import FastAPI, WebSocket
-from app.routers import telemetry, path_planning, lidar, survivors
+from app.routers import telemetry, path_planning, lidar, survivors, simulation
 from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
@@ -20,12 +20,12 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Register Routers
+# Register Routers (simulation removed)
 app.include_router(telemetry.router, prefix="/api/telemetry", tags=["Telemetry"])
 app.include_router(path_planning.router, prefix="/api/path-planning", tags=["Path Planning"])
 app.include_router(lidar.router, prefix="/api/lidar", tags=["LiDAR"])
 app.include_router(survivors.router, prefix="/api/survivors", tags=["Survivors"])
-# app.include_router(simulation.router, prefix="/api/simulation", tags=["Simulation"])
+app.include_router(simulation.router, prefix="/api/simulation", tags=["Simulation"])
 
 if __name__ == "__main__":
     import uvicorn

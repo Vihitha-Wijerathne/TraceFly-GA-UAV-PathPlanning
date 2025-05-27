@@ -74,6 +74,8 @@ class Point3D(BaseModel):
     x: float
     y: float
     z: float
+    tag: str    
+
 
 class LiDARPayload(BaseModel):
     uav_id: str

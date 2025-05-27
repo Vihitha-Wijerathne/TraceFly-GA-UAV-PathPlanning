@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
@@ -6,9 +6,11 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import LidarObstacle, LiDARRecord
 from app.schemas import LidarObstacleSchema
-from app.schemas import LiDARPingLite
+from app.schemas import LiDARPingLite, LiDARPayload, Point3D
 
 router = APIRouter()
+
+LIDAR_HIT_HISTORY = {}
 
 class LiDARTestPing(BaseModel):
     message: str
@@ -68,6 +70,28 @@ def receive_lidar_minimal(payload: LiDARPingLite, db: Session = Depends(get_db))
     return {"status": "ok", "received_hits": payload.hit_count}
 
 @router.get("/unity/history/{uav_id}")
-def get_lidar_history(uav_id: str, db: Session = Depends(get_db)):
-    records = db.query(LiDARRecord).filter(LiDARRecord.uav_id == uav_id).order_by(LiDARRecord.timestamp).all()
-    return [{"timestamp": r.timestamp, "hit_count": r.hit_count} for r in records]
+def get_lidar_history(uav_id: str):
+    # Return the latest 100 records, including tags!
+    hlist = LIDAR_HIT_HISTORY.get(uav_id, [])
+    result = []
+    for entry in hlist:
+        result.append({
+            "timestamp": entry["timestamp"],
+            "hit_count": entry["hit_count"],
+            "tags": [hit.tag for hit in entry["hits"]],
+        })
+    return result
+@router.post("/unity/full")
+def store_pointcloud(payload: LiDARPayload):
+    # Keep last 100 for each UAV
+    hlist = LIDAR_HIT_HISTORY.setdefault(payload.uav_id, [])
+    entry = {
+        "timestamp": payload.timestamp,
+        "hits": payload.hits,
+        "hit_count": len(payload.hits),
+    }
+    hlist.append(entry)
+    # Keep only latest 100
+    if len(hlist) > 100:
+        hlist.pop(0)
+    return {"status": "stored", "count": len(payload.hits)}

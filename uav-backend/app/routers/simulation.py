@@ -1,31 +1,36 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List
-from .GA_complex_env import ComplexEnvironment
-from .GA_enhanced import GeneticAlgorithm
+from fastapi import APIRouter
+import requests
 
 router = APIRouter()
 
-class SimulationRequest(BaseModel):
-    start: List[float]  # [x, y, z]
-    destination: List[float]
-
 @router.post("/start")
-def start_simulation(request: SimulationRequest):
+def start_simulation():
     try:
-        x_bounds = (0, 100)
-        y_bounds = (0, 50)
-        z_bounds = (0, 100)
-        num_obstacles = 20
-
-        environment = ComplexEnvironment(x_bounds, y_bounds, z_bounds, num_obstacles)
-        ga = GeneticAlgorithm(population_size=50, generations=100, mutation_rate=0.2)
-
-        best_path = ga.run(tuple(request.start), tuple(request.destination), environment)
-
-        return {
-            "best_path": best_path,
-            "obstacles": environment.obstacles
-        }
+        r = requests.post("http://localhost:8081/start")
+        return {"status": "started", "unity_status": r.status_code}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "error", "error": str(e)}
+
+@router.post("/stop")
+def stop_simulation():
+    try:
+        r = requests.post("http://localhost:8081/stop")
+        return {"status": "stopped", "unity_status": r.status_code}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+@router.post("/pause")
+def pause_simulation():
+    try:
+        r = requests.post("http://localhost:8081/pause")
+        return {"status": "paused", "unity_status": r.status_code}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+@router.post("/resume")
+def resume_simulation():
+    try:
+        r = requests.post("http://localhost:8081/resume")
+        return {"status": "resumed", "unity_status": r.status_code}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
