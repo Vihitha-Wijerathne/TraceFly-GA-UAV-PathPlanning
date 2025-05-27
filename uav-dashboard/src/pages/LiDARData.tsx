@@ -1,17 +1,21 @@
 import LiDARChart from "../components/LiDARChart";
+import LiDARHistoryTable from "../components/LiDARHistoryTable";
 
 const LiDARData = () => {
-
   return (
-    <div>
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          
-        </div>
+    <div className="container mx-auto p-6 space-y-10">
+      <h2 className="text-2xl font-bold text-gray-800 flex justify-center">📡 LiDAR Analytics</h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Center the chart */}
+      <div className="flex justify-center">
+        <div className="w-full max-w-4xl">
           <LiDARChart />
         </div>
+      </div>
+
+      {/* Full width history table */}
+      <div className="w-full">
+        <LiDARHistoryTable />
       </div>
     </div>
   );
