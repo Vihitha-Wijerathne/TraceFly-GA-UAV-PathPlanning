@@ -81,3 +81,61 @@ def compress_imu(imu_data):
     quantized_imu, min_val, step = quantize(imu_data.flatten(), levels=128)
     rle_values, rle_counts = run_length_encode(quantized_imu)
     return rle_values, rle_counts, min_val, step
+
+### LiDAR Compression ###
+def compress_lidar(lidar_points, voxel_size=0.1):
+    """
+    Compresses LiDAR data using voxel grid downsampling and Huffman encoding.
+    """
+    # Voxel grid downsampling
+    grid = (lidar_points / voxel_size).astype(int)
+    unique_voxels = np.unique(grid, axis=0)
+    downsampled_points = unique_voxels * voxel_size
+
+    # Flatten and Huffman encode
+    flat_points = downsampled_points.flatten().astype(int)
+    encoded_data, huffman_tree = huffman_encode(flat_points)
+
+    # Compress using zlib
+    compressed_data = zlib.compress(encoded_data.encode())
+    return compressed_data, huffman_tree
+
+### GA Waypoint Compression ###
+def compress_ga_waypoints(waypoints):
+    """
+    Compresses GA waypoints using delta encoding, quantization, and LZMA compression.
+    """
+    # Delta encoding
+    delta_encoded = delta_encode(waypoints)
+
+    # Quantization
+    quantized, min_val, step = quantize(delta_encoded, levels=256)
+
+    # LZMA compression
+    serialized_data = quantized.tobytes()
+    compressed_data = zlib.compress(serialized_data)
+
+    return compressed_data, min_val, step
+
+### Data Prioritization Based on Bandwidth ###
+def prioritize_data(data, bandwidth_limit):
+    """
+    Prioritizes telemetry data based on available bandwidth.
+    """
+    # Assign priorities (e.g., IMU > GPS > LiDAR)
+    priority_order = ["imu", "gps", "lidar"]
+    prioritized_data = []
+
+    # Sort data by priority
+    for key in priority_order:
+        if key in data:
+            prioritized_data.append((key, data[key]))
+
+    # Calculate total size and trim data to fit bandwidth
+    total_size = sum(len(item[1]) for item in prioritized_data)
+    if total_size > bandwidth_limit:
+        for i, (key, value) in enumerate(prioritized_data):
+            allowed_size = int(len(value) * (bandwidth_limit / total_size))
+            prioritized_data[i] = (key, value[:allowed_size])
+
+    return dict(prioritized_data)
